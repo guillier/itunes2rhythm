@@ -31,7 +31,7 @@ from datetime import datetime, timedelta
 from urllib.parse import unquote_to_bytes, quote
 
 
-def convlocation( location ):
+def convlocation(location):
     match = re.match(r"file://(\w+/[A-Z]:)(/.+)", location)
     if not match:
         sys.exit("Invalid location: " + location)
@@ -40,7 +40,7 @@ def convlocation( location ):
     if drive not in cfg["driveMapping"]:
         sys.exit("Unknown drive: %s" % drive)
     mapped_drive = cfg["driveMapping"][drive]
-    if( mapped_drive == None ):
+    if mapped_drive is None:
         return None
     # Conversion UTF-8 NFD (Mac) --> UTF-8 NFC (Linux/Windows/W3C/...)
     path = quote(unicodedata.normalize('NFC',
@@ -50,14 +50,14 @@ def convlocation( location ):
     return "file://" + mapped_drive + path
 
 
-def convString (string):
+def convString(string):
     r = []
-    for i,ch in enumerate(string):
-        r.append(ch if (ord(ch)<128) else "&#x"+"%X" % ord(ch)+";")
+    for i, ch in enumerate(string):
+        r.append(ch if ord(ch) < 128 else "&#x"+"%X" % ord(ch)+";")
     return ''.join(r).strip()
 
 
-def getStringTag( keytag ):
+def getStringTag(keytag):
     sibling = getNextSibling(keytag)
     if not sibling:
         return None
@@ -66,7 +66,7 @@ def getStringTag( keytag ):
     return sibling.firstChild.data
 
 
-def getIntegerTag( keytag ):
+def getIntegerTag(keytag):
     sibling = getNextSibling(keytag)
     if not sibling:
         return None
@@ -75,14 +75,14 @@ def getIntegerTag( keytag ):
     return int(sibling.firstChild.data)
 
 
-def getDateTag( keytag ):
+def getDateTag(keytag):
     sibling = getNextSibling(keytag)
     if not sibling:
         return None
     if sibling.tagName != 'date':
         return None
     return mktime(strptime(sibling.firstChild.data, '%Y-%m-%dT%H:%M:%SZ')
-            ) - timezone
+                 ) - timezone
 
 
 def getNextSibling(item):
@@ -98,12 +98,14 @@ def getNextSibling(item):
 # workhorses #
 ##############
 
+
 def writeLibrary(rlib, tracksDict):
     """ Writes library to rlib. Returns a track/location dictionary that we'll
         need later for playlists. """
     trackCount = 0
-    timestamp = (datetime.utcnow() - datetime(1970,1,1)) // timedelta(seconds=1)
-    ourdb = {} # our tracks db, with matching locations. used for playlists
+    timestamp = (datetime.utcnow() - datetime(1970, 1, 1)) \
+            // timedelta(seconds=1)
+    ourdb = {}  # our tracks db, with matching locations. used for playlists
     rlib.write('<?xml version="1.0" standalone="yes"?>\n')
     rlib.write('<rhythmdb version="1.8">\n')
     for child in tracksDict.childNodes:
@@ -119,7 +121,7 @@ def writeLibrary(rlib, tracksDict):
         genre = DEFAULT_GENRE
         location = None
         trackNumber = None
-        discnNmber = None
+        discNumber = None
         fileSize = None
         duration = None
         rating = None
@@ -169,13 +171,13 @@ def writeLibrary(rlib, tracksDict):
             elif keytype == 'Play Date UTC':
                 lastPlayed = getDateTag(keytag)
             elif keytype == 'Play Count':
-                playcount = getIntegerTag(keytag)
+                playCount = getIntegerTag(keytag)
             elif keytype == 'Track ID':
-                trackid = getIntegerTag (keytag)
+                trackid = getIntegerTag(keytag)
             elif keytype == 'Kind':
                 kind = getStringTag(keytag)
                 if kind in cfg["mediaTypeMapping"]:
-                    mediaType=cfg["mediaTypeMapping"][kind]
+                    mediaType = cfg["mediaTypeMapping"][kind]
             elif keytype == 'Track Type':
                 trackType = getStringTag(keytag)
         if trackType != "File":
@@ -213,7 +215,7 @@ def writeLibrary(rlib, tracksDict):
         if mediaType != "":
             rlib.write('    <media-type>%s</media-type>\n' % mediaType)
         if albumArtist:
-            rlib.write('    <album-artist>%s</album-artist>\n' % 
+            rlib.write('    <album-artist>%s</album-artist>\n' %
                     convString(escape(albumArtist)))
         rlib.write('  </entry>\n')
 
@@ -221,6 +223,7 @@ def writeLibrary(rlib, tracksDict):
     rlib.close()
     print("====> %d out of %d songs collected." % (len(ourdb), trackCount))
     return ourdb
+
 
 def writePlaylists(rplists, defaultlists, plistArray, ourdb):
     """ Writes playlists from plistArray to rplists. Reads a list of playlists
@@ -236,7 +239,6 @@ def writePlaylists(rplists, defaultlists, plistArray, ourdb):
         if child.nodeType != xml.dom.Node.ELEMENT_NODE or \
                 child.tagName != 'dict':
             continue
-        listName = None
         entries = []
         for keytag in child.childNodes:
             if keytag.nodeType != xml.dom.Node.ELEMENT_NODE or \
@@ -246,7 +248,7 @@ def writePlaylists(rplists, defaultlists, plistArray, ourdb):
                 continue
             keytype = keytag.firstChild.data
             if keytype == 'Name':
-                title = getStringTag( keytag )
+                title = getStringTag(keytag)
             elif keytype == 'Playlist Items':
                 idArray = getNextSibling(keytag)
                 assert idArray.tagName == 'array', \
@@ -257,7 +259,7 @@ def writePlaylists(rplists, defaultlists, plistArray, ourdb):
                         continue
                     songKey = getNextSibling(song.firstChild)
                     assert songKey.tagName == 'key'
-                    location=ourdb.get(getIntegerTag(songKey))
+                    location = ourdb.get(getIntegerTag(songKey))
                     if location:
                         entries.append(location)
         assert title, "error: titleless playlist"
@@ -299,7 +301,9 @@ for bigDictItem in bigDict.childNodes:
                     "need <array> after 'Playlists'"
 assert tracksDict, 'Could not find tracks dict'
 
-dlists = open(os.path.join(os.path.dirname(sys.argv[0]),"defaultplaylists"),'r')
+dlists = open(os.path.join(os.path.dirname(sys.argv[0]),
+                           "defaultplaylists"),
+                           'r')
 rlib = open(cfg["rLib"], 'w')
 rlists = open(cfg["rLists"], 'w')
 ourdb = writeLibrary(rlib, tracksDict)
