@@ -44,7 +44,7 @@ def convlocation(location):
         return None
     # Conversion UTF-8 NFD (Mac) --> UTF-8 NFC (Linux/Windows/W3C/...)
     path = quote(unicodedata.normalize('NFC',
-        unquote_to_bytes(path).decode("utf-8")))
+        unquote_to_bytes(path).decode("utf-8")),"/!'(),&~+$")
     if path[-1] == '/':
         path = path[0:-1]
     return "file://" + mapped_drive + path
