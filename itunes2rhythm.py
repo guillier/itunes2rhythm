@@ -54,9 +54,11 @@ def convlocation(location):
 
 
 def convString(string):
-    r = []
-    for i, ch in enumerate(string):
-        r.append(ch if ord(ch) < 128 else "&#x"+"%X" % ord(ch)+";")
+    r = [
+        ch if ord(ch) < 128 else "&#x" + "%X" % ord(ch) + ";"
+        for i, ch in enumerate(string)
+    ]
+
     return ''.join(r).strip()
 
 
@@ -183,7 +185,7 @@ def writeLibrary(rlib, tracksDict):
                     mediaType = cfg["mediaTypeMapping"][kind]
             elif keytype == 'Track Type':
                 trackType = getStringTag(keytag)
-        if (trackType != "File" or trackType == "URL"):
+        if trackType != "File":
             print("'%s' (ID %d) is remote" % (title, trackid))
             continue
         if not mediaType:
