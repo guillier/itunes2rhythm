@@ -33,9 +33,7 @@ from urllib.parse import unquote_to_bytes, quote
 
 def convlocation(location):
     match = re.match(r"file://(\w+/[A-Z]:)(/.+)", location)
-    # print("location: "+location)
     if not match:
-        # sys.exit("Invalid location: " + location)
         print("Invalid location: " + location)
         return None
     drive = match.group(1)
@@ -183,7 +181,7 @@ def writeLibrary(rlib, tracksDict):
                     mediaType = cfg["mediaTypeMapping"][kind]
             elif keytype == 'Track Type':
                 trackType = getStringTag(keytag)
-        if (trackType != "File" or trackType == "URL"):
+        if trackType != "File":
             print("'%s' (ID %d) is remote" % (title, trackid))
             continue
         if not mediaType:
